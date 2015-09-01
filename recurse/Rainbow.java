@@ -2,16 +2,17 @@ import java.math.BigInteger;
 import java.security.*;
 import java.util.*;
 import java.io.*;
-import javax.xml.bing.annotation.adapters.HexBinaryAdapter;
+import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
 
 public class Rainbow {
     private char[] hexSet = "0123456789ABCDEF".toCharArray();
-    private HashMap<int, String> table; // <Hash, word> (or vice versa??) Rainbow table
+    private HashMap<byte[], byte[]> table; // <Hash, word> (or vice versa??) Rainbow table
     private MessageDigest SHA; // 160 bits
-    private int chainLen = 200;
+    private int chainLen = 180;
+    private int rows = 1000;
 
     public Rainbow() {
-        table = new HashMap<int, String>();
+        table = new HashMap<byte[], byte[]>();
         try {
             SHA = MessageDigest.getInstance("SHA1");
         } catch (Exception e) {
@@ -34,16 +35,90 @@ public class Rainbow {
 
     //---- REDUCE FUNCTION --------------------------------
     public byte[] reduce(byte[] digest, int len) {
+        byte last_byte = (byte) len;
         byte[] reduction = new byte[3];
-        reduction[0] = digest[len % 20];
-        reduction[1] = digest[(len + 1) % 20];
-        reduction[2] = digest[(len + 2) % 20];
+        for (int i = 0; i < reduction.length; i++) {
+            reduction[i] = digest[(len + i) % 20] + last_byte;
+        }
         return reduction;
     }
 
+    //---- GENERATE TABLE ---------------------------------
+    public void generate() {
+        byte[] plaintext, reduction;
+        long time1, time2;
+        System.out.println("\nGenerating table...");
+        time1 = System.currentTimeMillis();
+
+        for (int i = 0; i < rows; i++) {
+            plaintext = intToBytes(i);
+            reduction = generateChain(plaintext);
+            table.put(reduction, plaintext);
+        }
+
+        time2 = System.currentTimeMillis();
+        System.out.println("Table generated in " + ((time2 - time1)/1000.0)  + " seconds");
+    }
+
+    public byte[] generateChain(byte[] plaintext) {
+        byte[] digest;
+        byte[] reduction = plaintext;
+        for (int len = 0; len < chainLen; len++) {
+            digest = hash(reduction);
+            reduction = reduce(digest, len);
+        }
+        return digest;
+    }
+
+    //---- INVERTING 2 ------------------------------------
+    public byte[] invert(byte[] digest_to_match) {
+        byte[] reduction_to_match;
+        for (int len = 0; len < chainLen; len++) {
+            reduction_to_match = reduce(digest_to_match);
+            if (table.containsKey(reduction_to_match)) {
+                plaintext = invertChain(reduction_to_match, digest_to_match);
+                if (plaintext != null) {
+                    return plaintext;
+                }
+            }
+            digest_to_match = hash(reduction_to_match); // MAYBE *****
+        }
+        return null;
+    }
+    
+    public byte[] invertChain(byte[] reduction_to_match, byte[] digest_to_match) {
+        byte[] digest;
+        byte[] plaintext = table.get(reduction_to_match);
+        for (int len = 0; len < chainLen; len++) {
+            digest = hash(plaintext);
+            if (digest.equals(digest_to_match)) {
+                return plaintext;
+            }
+            plaintext = reduce(digest, len);
+        }
+        return null;
+    }
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     //---- INVERTING --------------------------------------
     public byte[] invert(byte[] hash) {
-        byte[] digest, result, plaintext;
+        byte[] digest, result;
+        byte[] plaintext = new byte[3];
         // Start from the end of the chain and move forwards
         for (int len = chainLen - 1; len >= 0; len--) {
             digest = hash;
@@ -51,14 +126,20 @@ public class Rainbow {
                 plaintext = reduce(digest, i);
                 digest = hash(plaintext);
             }
-            if (table.containsKey(plaintext)) {
-                result = invertChain(table.get(plaintext), hash);
-                if (result != null) {
-                    return result;
-                }
+            result = insertToTable(plaintext);
+            if (result != null) {
+                return result;
             }
         }
         return null;
+    }
+    
+    public byte[] insertToTable(byte[] plaintext) {
+        String plaintext_str = String.valueOf(bytesToInt(plaintext));
+        if (table.containsKey(plaintext_str)) {
+            result = invertChain(table.get(plaintext_str), hash);
+        }
+        return result;
     }
 
     public byte[] invertChain(byte[] plaintext, byte[] hash) {
@@ -73,51 +154,7 @@ public class Rainbow {
          return null;
     }
 
-    //---- GENERATE TABLE ---------------------------------
-    public void generate() {
-        byte[] plaintext, reduction;
-        int collisions = 0;
-        long time1, time2;
-
-        System.out.println("\nGenerating table...");
-        time1 = System.currentTimeMillis();
-
-        for (int i = 0; i < rows; i++) {
-            plaintext = intToBytes(i);
-            reduction = generateChain(plaintext);
-            table.put(i, bytesToHex(reduction));
-            // USE THE FOLLOWING IF USING THE HASH AS KEYS INSTEAD OF WORD
-            if (!table.containsKey(reduction)) {
-                table.put(reduction, plaintext);
-            } else {
-                collisions++;
-            } // END
-        }
-        time2 = System.currentTimeMillis();
-        System.out.println("Table generated in " + ((time2 - time1)/100)  + " seconds");
-        System.out.println("Number of collisions: " + collisions;
-    }
-
-    public byte[] generateChain(byte[] plaintext) {
-        byte[] digest;
-        byte[] reduction = plaintext;
-        for (int len = 0; len < chainLen; len++) {
-            digest = hash(reduction);
-            reduction = reduce(digest, len);
-        }
-        return reduction;
-    }
-
     //---- HELPER FUNCTIONS -------------------------------
-    public String getHexWord(int n) {
-        // Get last 3 bytes of n for word
-        byte word[] = new byte[3];
-        word[0] = (byte) n & 0xFF;
-        word[1] = (byte) ((n >> 8) & 0xFF);
-        word[2] = (byte) ((n >> 16) & 0xFF);
-        return bytesToHex(word); // IS THIS NECESSARY???
-    }
-
     public byte[] hexToBytes(String hexString) {
         HexBinaryAdapter adapter = new HexBinaryAdapter();
         byte[] bytes = adapter.unmarshal(hexString);
@@ -131,10 +168,10 @@ public class Rainbow {
     }
 
     public byte[] intToBytes(int n) {
-        byte plaintext[] = new byte[3]
-        plaintext[0] = (byte) n & 0xFF;
+        byte plaintext[] = new byte[3];
+        plaintext[0] = (byte) ((n >> 16) & 0xFF);
         plaintext[1] = (byte) ((n >> 8) & 0xFF);
-        plaintext[2] = (byte) ((n >> 16) & 0x0F);
+        plaintext[2] = (byte) n;
         return plaintext;
     }
 
