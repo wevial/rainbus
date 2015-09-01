@@ -8,8 +8,8 @@ public class Rainbow {
     private char[] hexSet = "0123456789ABCDEF".toCharArray();
     private HashMap<byte[], byte[]> table; // <Hash, word> (or vice versa??) Rainbow table
     private MessageDigest SHA; // 160 bits
-    private int chainLen = 180;
-    private int rows = 1000;
+    private int chainLen = 200;
+    private int rows = 20000;
 
     public Rainbow() {
         table = new HashMap<byte[], byte[]>();
@@ -35,25 +35,31 @@ public class Rainbow {
 
     //---- REDUCE FUNCTION --------------------------------
     public byte[] reduce(byte[] digest, int len) {
-        byte last_byte = (byte) len;
-        byte[] reduction = new byte[3];
-        for (int i = 0; i < reduction.length; i++) {
-            reduction[i] = (byte) (digest[(len + i) % 20] + last_byte);
+//        byte last_byte = (byte) len;
+        byte[] word = new byte[3];
+        for (int i = 0; i < word.length; i++) {
+//            word[i] = (byte) (digest[(len + i) % 20] + last_byte);
+            word[i] = (byte) (digest[i] + len);
         }
-        return reduction;
+        return word;
     }
 
     //---- GENERATE TABLE ---------------------------------
     public void generate() {
-        byte[] plaintext, reduction;
+        byte[] plaintext, word;
         long time1, time2;
         System.out.println("\nGenerating table...");
         time1 = System.currentTimeMillis();
 
         for (int i = 0; i < rows; i++) {
             plaintext = intToBytes(i);
-            reduction = generateChain(plaintext);
-            table.put(reduction, plaintext);
+            word = generateChain(plaintext);
+            if (!table.containsKey(word)) {
+                table.put(word, plaintext);
+                //System.out.println(bytesToHex(word) + " | " + bytesToHex(plaintext));
+            } else {
+                System.out.println("Collision @ " + bytesToHex(plaintext));
+            }
         }
 
         time2 = System.currentTimeMillis();
@@ -62,39 +68,63 @@ public class Rainbow {
 
     public byte[] generateChain(byte[] plaintext) {
         byte[] digest = new byte[20];
-        byte[] reduction = plaintext;
+        byte[] word = plaintext;
         for (int len = 0; len < chainLen; len++) {
-            digest = hash(reduction);
-            reduction = reduce(digest, len);
+            digest = hash(word);
+            word = reduce(digest, len);
         }
-        return digest;
+        return word;
     }
 
-    //---- INVERTING 2 ------------------------------------
+    //---- INVERTING --------------------------------------
     public byte[] invert(byte[] digest_to_match) {
-        byte[] reduction_to_match, plaintext;
+        byte[] word_to_match, word;
         for (int len = chainLen - 1; len >= 0; len--) {
-            reduction_to_match = reduce(digest_to_match, len);
-            if (table.containsKey(reduction_to_match)) {
-                plaintext = invertChain(reduction_to_match, digest_to_match);
+        //for (int len = 0; len < chainLen; len++) {
+            word_to_match = reduce(digest_to_match, len);
+
+            if (table.containsKey(word_to_match)) {
+                word = invertChain(word_to_match, digest_to_match);
+                if (word != null) {
+                    System.out.println("MATCH THEREs A MATCH");
+                    return word;
+                }
+            }
+            digest_to_match = hash(word_to_match); // MAYBE *****
+        }
+        return null;
+    }
+
+    public byte[] invert2(byte[] digest_to_match) {
+        byte[] word_to_match = new byte[3];
+        byte[] plaintext, digest;
+        for (int i = chainLen - 1; i >= 0; i--) {
+            digest = digest_to_match;
+            for (int j = i; j < chainLen; j++) {
+                word_to_match = reduce(digest, j);
+                digest = hash(word_to_match);
+            }
+
+            if (table.containsKey(word_to_match)) {
+                plaintext = invertChain(word_to_match, digest_to_match);
                 if (plaintext != null) {
                     return plaintext;
                 }
             }
-            //digest_to_match = hash(reduction_to_match); // MAYBE *****
+            //digest_to_match = hash(word_to_match); // MAYBE *****
         }
         return null;
     }
     
-    public byte[] invertChain(byte[] reduction_to_match, byte[] digest_to_match) {
-        byte[] digest;
-        byte[] plaintext = table.get(reduction_to_match);
+    public byte[] invertChain(byte[] word_to_match, byte[] digest_to_match) {
+        byte[] word = table.get(word_to_match);
+        byte[] digest = hash(word);
         for (int len = 0; len < chainLen; len++) {
-            digest = hash(plaintext);
             if (digest.equals(digest_to_match)) {
-                return plaintext;
+                return word;
             }
-            plaintext = reduce(digest, len);
+            digest = hash(word);
+            word = reduce(digest, len);
         }
         return null;
     }
@@ -121,7 +151,7 @@ public class Rainbow {
     }
 
     public int bytesToInt(byte[] bytes) {
-        return java.nio.ByteBuffer.wrap(bytes).order(java.nio.ByteOrder.LITTLE_ENDIAN).getInt();
+        return java.nio.ByteBuffer.wrap(bytes).getInt();
     }
 
     public void writeToFile(String file) {
