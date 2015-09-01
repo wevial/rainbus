@@ -38,7 +38,7 @@ public class Rainbow {
         byte last_byte = (byte) len;
         byte[] reduction = new byte[3];
         for (int i = 0; i < reduction.length; i++) {
-            reduction[i] = digest[(len + i) % 20] + last_byte;
+            reduction[i] = (byte) (digest[(len + i) % 20] + last_byte);
         }
         return reduction;
     }
@@ -61,7 +61,7 @@ public class Rainbow {
     }
 
     public byte[] generateChain(byte[] plaintext) {
-        byte[] digest;
+        byte[] digest = new byte[20];
         byte[] reduction = plaintext;
         for (int len = 0; len < chainLen; len++) {
             digest = hash(reduction);
@@ -72,16 +72,16 @@ public class Rainbow {
 
     //---- INVERTING 2 ------------------------------------
     public byte[] invert(byte[] digest_to_match) {
-        byte[] reduction_to_match;
-        for (int len = 0; len < chainLen; len++) {
-            reduction_to_match = reduce(digest_to_match);
+        byte[] reduction_to_match, plaintext;
+        for (int len = chainLen - 1; len >= 0; len--) {
+            reduction_to_match = reduce(digest_to_match, len);
             if (table.containsKey(reduction_to_match)) {
                 plaintext = invertChain(reduction_to_match, digest_to_match);
                 if (plaintext != null) {
                     return plaintext;
                 }
             }
-            digest_to_match = hash(reduction_to_match); // MAYBE *****
+            //digest_to_match = hash(reduction_to_match); // MAYBE *****
         }
         return null;
     }
@@ -97,61 +97,6 @@ public class Rainbow {
             plaintext = reduce(digest, len);
         }
         return null;
-    }
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    //---- INVERTING --------------------------------------
-    public byte[] invert(byte[] hash) {
-        byte[] digest, result;
-        byte[] plaintext = new byte[3];
-        // Start from the end of the chain and move forwards
-        for (int len = chainLen - 1; len >= 0; len--) {
-            digest = hash;
-            for (int i = len; i < chainLen; i++) {
-                plaintext = reduce(digest, i);
-                digest = hash(plaintext);
-            }
-            result = insertToTable(plaintext);
-            if (result != null) {
-                return result;
-            }
-        }
-        return null;
-    }
-    
-    public byte[] insertToTable(byte[] plaintext) {
-        String plaintext_str = String.valueOf(bytesToInt(plaintext));
-        if (table.containsKey(plaintext_str)) {
-            result = invertChain(table.get(plaintext_str), hash);
-        }
-        return result;
-    }
-
-    public byte[] invertChain(byte[] plaintext, byte[] hash) {
-         byte[] digest;
-         for (int i = 0; i < chainLen; i++) {
-             digest = hash(plaintext);
-             if (digest.equals(hash)) {
-                 return plaintext;
-             }
-             plaintext = reduce(digest, i);
-         }
-         return null;
     }
 
     //---- HELPER FUNCTIONS -------------------------------
