@@ -9,7 +9,7 @@ public class Rainbow {
     private HashMap<byte[], byte[]> table; // <Hash, word> (or vice versa??) Rainbow table
     private MessageDigest SHA; // 160 bits
     private int chainLen = 200;
-    private int rows = 20000;
+    private int rows = 1000;
 
     public Rainbow() {
         table = new HashMap<byte[], byte[]>();
@@ -46,17 +46,17 @@ public class Rainbow {
 
     //---- GENERATE TABLE ---------------------------------
     public void generate() {
-        byte[] plaintext, word;
+        byte[] plaintext, digest;
         long time1, time2;
         System.out.println("\nGenerating table...");
         time1 = System.currentTimeMillis();
 
         for (int i = 0; i < rows; i++) {
             plaintext = intToBytes(i);
-            word = generateChain(plaintext);
-            if (!table.containsKey(word)) {
-                table.put(word, plaintext);
-                //System.out.println(bytesToHex(word) + " | " + bytesToHex(plaintext));
+            digest = generateChain(plaintext);
+            if (!table.containsKey(digest)) {
+                table.put(digest, plaintext);
+//                System.out.println(bytesToHex(digest) + " | " + bytesToHex(plaintext));
             } else {
                 System.out.println("Collision @ " + bytesToHex(plaintext));
             }
@@ -73,10 +73,25 @@ public class Rainbow {
             digest = hash(word);
             word = reduce(digest, len);
         }
-        return word;
+        byte[] key = new byte[3];
+        for (int i = 0; i < key.length; i++) {
+            key[i] = digest[i];
+        }
+        return key;
+        //return digest;
     }
 
     //---- INVERTING --------------------------------------
+    //public byte[] invert3(byte[] digest_to_match) {
+    //    byte[] word_to_match, word;
+    //    byte[] digest = digest_to_match;
+    //    for (int i = 0; i < chainLen; i++) {
+    //        if (table.containsKey(digest)) {
+    //            word = invertChain(digest);
+    //        }
+    //    }
+    //}
+
     public byte[] invert(byte[] digest_to_match) {
         byte[] word_to_match, word;
         for (int len = chainLen - 1; len >= 0; len--) {
