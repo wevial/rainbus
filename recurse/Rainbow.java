@@ -71,7 +71,8 @@ public class Rainbow {
         System.out.println("Table generated in " + ((time2 - time1)/1000.0)  + " seconds");
         System.out.println("Number of successes: " + success + " of " + rows);
     }
-
+    
+    /* TODO: Change return type to String */
     public byte[] generateChain(byte[] plaintext) {
         byte[] digest = new byte[20];
         byte[] word = plaintext;
@@ -88,15 +89,15 @@ public class Rainbow {
     }
 
     //---- INVERTING --------------------------------------
-    //public byte[] invert3(byte[] digest_to_match) {
-    //    byte[] word_to_match, word;
-    //    byte[] digest = digest_to_match;
-    //    for (int i = 0; i < chainLen; i++) {
-    //        if (table.containsKey(digest)) {
-    //            word = invertChain(digest);
-    //        }
-    //    }
-    //}
+    public byte[] invert3(byte[] digest_to_match) {
+        byte[] word_to_match, word;
+        byte[] digest = digest_to_match;
+        for (int i = 0; i < chainLen; i++) {
+            if (table.containsKey(digest)) {
+                word = invertChain(digest);
+            }
+        }
+    }
 
     public byte[] invert(byte[] digest_to_match) {
         byte[] word_to_match, word;
