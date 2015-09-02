@@ -6,13 +6,15 @@ import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
 
 public class Rainbow {
     private char[] hexSet = "0123456789ABCDEF".toCharArray();
-    private HashMap<byte[], byte[]> table; // <Hash, word> (or vice versa??) Rainbow table
+    private HashMap<String, byte[]> table; // <Hash, word> (or vice versa??) Rainbow table
+    //private HashMap<byte[], byte[]> table; // <Hash, word> (or vice versa??) Rainbow table
     private MessageDigest SHA; // 160 bits
     private int chainLen = 200;
-    private int rows = 1000;
+    private int rows = 28000;
 
     public Rainbow() {
-        table = new HashMap<byte[], byte[]>();
+        table = new HashMap<String, byte[]>();
+        //table = new HashMap<byte[], byte[]>();
         try {
             SHA = MessageDigest.getInstance("SHA1");
         } catch (Exception e) {
@@ -48,22 +50,26 @@ public class Rainbow {
     public void generate() {
         byte[] plaintext, digest;
         long time1, time2;
+        int success = 0;
         System.out.println("\nGenerating table...");
         time1 = System.currentTimeMillis();
 
         for (int i = 0; i < rows; i++) {
             plaintext = intToBytes(i);
             digest = generateChain(plaintext);
-            if (!table.containsKey(digest)) {
-                table.put(digest, plaintext);
+            String key = bytesToHex(digest);
+            if (!table.containsKey(key)) {
+                table.put(key, plaintext);
+                success++;
 //                System.out.println(bytesToHex(digest) + " | " + bytesToHex(plaintext));
             } else {
-                System.out.println("Collision @ " + bytesToHex(plaintext));
+                //System.out.println("Collision @ key: " + key + " word: " + bytesToHex(plaintext));
             }
         }
 
         time2 = System.currentTimeMillis();
         System.out.println("Table generated in " + ((time2 - time1)/1000.0)  + " seconds");
+        System.out.println("Number of successes: " + success + " of " + rows);
     }
 
     public byte[] generateChain(byte[] plaintext) {
