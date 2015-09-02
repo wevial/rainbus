@@ -48,7 +48,7 @@ public class Rainbow {
 
     //---- GENERATE TABLE ---------------------------------
     public void generate() {
-        byte[] plaintext, digest;
+        byte[] plaintext, key;
         long time1, time2;
         int success = 0;
         System.out.println("\nGenerating table...");
@@ -56,12 +56,11 @@ public class Rainbow {
 
         for (int i = 0; i < rows; i++) {
             plaintext = intToBytes(i);
-            digest = generateChain(plaintext);
-            String key = bytesToHex(digest);
+            key = generateChain(plaintext);
             if (!table.containsKey(key)) {
                 table.put(key, plaintext);
                 success++;
-//                System.out.println(bytesToHex(digest) + " | " + bytesToHex(plaintext));
+//                System.out.println(key + " | " + bytesToHex(plaintext));
             } else {
                 //System.out.println("Collision @ key: " + key + " word: " + bytesToHex(plaintext));
             }
@@ -72,20 +71,23 @@ public class Rainbow {
         System.out.println("Number of successes: " + success + " of " + rows);
     }
     
-    /* TODO: Change return type to String */
-    public byte[] generateChain(byte[] plaintext) {
+    /* TODO: Change return type to String and use digest to key*/
+    public String generateChain(byte[] plaintext) {
         byte[] digest = new byte[20];
         byte[] word = plaintext;
         for (int len = 0; len < chainLen; len++) {
             digest = hash(word);
             word = reduce(digest, len);
         }
+        return digestToKey(digest);
+    }
+
+    public String digestToKey(byte[] digest) {
         byte[] key = new byte[3];
         for (int i = 0; i < key.length; i++) {
             key[i] = digest[i];
         }
-        return key;
-        //return digest;
+        return bytesToHex(key);
     }
 
     //---- INVERTING --------------------------------------
@@ -141,6 +143,7 @@ public class Rainbow {
     public byte[] invertChain(byte[] word_to_match, byte[] digest_to_match) {
         byte[] word = table.get(word_to_match);
         byte[] digest = hash(word);
+        String key = 
         for (int len = 0; len < chainLen; len++) {
             if (digest.equals(digest_to_match)) {
                 return word;
