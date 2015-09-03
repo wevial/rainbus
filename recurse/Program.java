@@ -20,12 +20,11 @@ public class Program {
         System.out.println("\n*******************************");
 
         System.out.println("\n*********** T E S T S ***********");
-        byte[][] words = new byte[5000][3];
-        for (int i = 0; i < words.length; i++) {
-            words[i] = table.intToBytes(i);
-        }
 
-        System.out.println("\n****  Invert - 20,000 row table");
+        int numWords = 20;
+        byte[][] words = generateWords(numWords);
+
+        System.out.println("\n**** Invert with ~28k row table");
         time1 = System.currentTimeMillis();
         byte[] digest, result;
         for (int i = 0; i < words.length; i++) {
@@ -40,9 +39,20 @@ public class Program {
         }
         time2 = System.currentTimeMillis();
         System.out.println("Total time: " + ((time2-time1)/1000.0) + " seconds.");
-        System.out.println("Success rate: " + success + " / 1000");
-        System.out.println("Rejection rate: " + rejects + " / 1000");
+        System.out.println("Success rate: " + success + " / " + numWords);
+        System.out.println("Rejection rate: " + rejects + " / " + numWords);
 
+    }
+
+    public static byte[][] generateWords(int n) {
+        byte[][] words = new byte[n][3];
+        for (int i = 0; i < words.length; i++) {
+            words[i] = table.intToBytes(i);
+        }
+        return words;
+    }
+
+    public static void invertWords(byte[][] words) {
     }
 
     /*public static void fromFile() {
