@@ -71,7 +71,6 @@ public class Rainbow {
         System.out.println("Number of successes: " + success + " of " + rows);
     }
     
-    /* TODO: Change return type to String and use digest to key*/
     public String generateChain(byte[] plaintext) {
         byte[] digest = new byte[20];
         byte[] word = plaintext;
@@ -82,23 +81,33 @@ public class Rainbow {
         return digestToKey(digest);
     }
 
-    public String digestToKey(byte[] digest) {
-        byte[] key = new byte[3];
-        for (int i = 0; i < key.length; i++) {
-            key[i] = digest[i];
-        }
-        return bytesToHex(key);
-    }
-
     //---- INVERTING --------------------------------------
-    public byte[] invert3(byte[] digest_to_match) {
-        byte[] word_to_match, word;
+    public byte[] invertNew(byte[] digest_to_match) {
+        byte[] word;
         byte[] digest = digest_to_match;
+        String key = digestToKey(digest_to_match);
         for (int i = 0; i < chainLen; i++) {
-            if (table.containsKey(digest)) {
-                word = invertChain(digest);
+            if (table.containsKey(key)) {
+                word = invertChainNew(digest, key);
+                if (word != null) {
+                    System.out.println("MATCH!!! " + bytesToHex(word));
+                    return word;
+                }
             }
         }
+        return null;
+    }
+
+    public byte[] invertChainNew(byte[] digest_to_match, String key) {
+        byte[] digest;
+        byte[] word = table.get(key);
+        for (int len = 0; len < chainLen; len++) {
+            digest = hash(word);
+            word = reduce(digest, len);
+            if (digest.equals(digest_to_match)) {
+                return word;
+        }
+        return null;
     }
 
     public byte[] invert(byte[] digest_to_match) {
@@ -143,7 +152,6 @@ public class Rainbow {
     public byte[] invertChain(byte[] word_to_match, byte[] digest_to_match) {
         byte[] word = table.get(word_to_match);
         byte[] digest = hash(word);
-        String key = 
         for (int len = 0; len < chainLen; len++) {
             if (digest.equals(digest_to_match)) {
                 return word;
@@ -155,6 +163,14 @@ public class Rainbow {
     }
 
     //---- HELPER FUNCTIONS -------------------------------
+    public String digestToKey(byte[] digest) {
+        byte[] key = new byte[3];
+        for (int i = 0; i < key.length; i++) {
+            key[i] = digest[i];
+        }
+        return bytesToHex(key);
+    }
+
     public byte[] hexToBytes(String hexString) {
         HexBinaryAdapter adapter = new HexBinaryAdapter();
         byte[] bytes = adapter.unmarshal(hexString);
