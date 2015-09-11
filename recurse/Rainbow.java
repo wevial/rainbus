@@ -59,7 +59,7 @@ public class Rainbow {
         for (int i = 0; i < rows; i++) { // ORIGINAL
             plaintext = intToBytes(i);
             word = generateChain(plaintext, i);
-            System.out.println("\n");
+        //    System.out.println("\n");
             key = bytesToHex(word);
             if (!table.containsKey(key)) {
                 table.put(key, plaintext);
@@ -112,12 +112,12 @@ public class Rainbow {
   //              System.out.println("Word: " + bytesToHex(table.get(key)));
                 result = invertChain(digest_to_match, table.get(key));
                 if (result != null) {
-                    System.out.println("MATCH!!! " + bytesToHex(result));
+//                    System.out.println("MATCH!!! " + bytesToHex(result));
                     return result;
                 }
             }
         }
-        System.out.println("");
+ //       System.out.println("");
         return null;
     }
 
@@ -132,7 +132,7 @@ public class Rainbow {
 
     public byte[] invertChain(byte[] digest_to_match, byte[] word) {
         byte[] digest;
-        System.out.println("INVERTING CHAIN");
+//        System.out.println("INVERTING CHAIN");
         for (int i = 0; i < chainLen; i++) {
             digest = hash(word);
     //        System.out.println("(Digest: " + bytesToHex(digest) + ")");

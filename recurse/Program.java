@@ -28,8 +28,8 @@ public class Program {
         System.out.println("\n**** Invert with ~28k row table");
         time1 = System.currentTimeMillis();
         byte[] digest, result;
-        for (int i = 0; i < numWords; i++) {
-        //for (int i = 0; i < words.length; i++) {
+//        for (int i = 0; i < numWords; i++) {
+        for (int i = 0; i < words.length; i++) {
             digest = words[i];
 //            System.out.println("Trying " + i + " (digest: " + table.bytesToHex(words[i]) + " )");
             //digest = table.hash(words[i]);
@@ -39,15 +39,15 @@ public class Program {
  //           System.out.println("Result " + result + "\n");
             if (result != null) {
                 success++;
-                System.out.println("Success! " + result);
+//                System.out.println("Success! " + result);
             } else {
                 rejects++;
             }
         } 
         time2 = System.currentTimeMillis();
         System.out.println("Total time: " + ((time2-time1)/1000.0) + " seconds.");
-        System.out.println("Success rate: " + success + " / " + numWords);
-        System.out.println("Rejection rate: " + rejects + " / " + numWords);
+        System.out.println("Success rate: " + success + " / " + words.length);
+        System.out.println("Rejection rate: " + rejects + " / " + words.length);
 
     }
 
