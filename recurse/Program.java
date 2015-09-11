@@ -13,7 +13,7 @@ public class Program {
         long time1, time2;
 
         System.out.println("\n*********** T A B L E S  G E N E R A T E D ***********");
-        table.writeToFile("RAINBOW_TABLE.ser");
+        //table.writeToFile("RAINBOW_TABLE.ser");
 
         /*System.out.println("\n*********** F I L E ***********");
         fromFile(); */
@@ -21,22 +21,29 @@ public class Program {
 
         System.out.println("\n*********** T E S T S ***********");
 
-        int numWords = 20;
-        byte[][] words = generateWords(numWords);
+        int numWords = 300;
+//        byte[][] words = generateWords(numWords);
+        byte[][] words = table.testInputs;
 
         System.out.println("\n**** Invert with ~28k row table");
         time1 = System.currentTimeMillis();
         byte[] digest, result;
-        for (int i = 0; i < words.length; i++) {
-            digest = table.hash(words[i]);
+        for (int i = 0; i < numWords; i++) {
+        //for (int i = 0; i < words.length; i++) {
+            digest = words[i];
+//            System.out.println("Trying " + i + " (digest: " + table.bytesToHex(words[i]) + " )");
+            //digest = table.hash(words[i]);
             result = table.invert(digest);
+            //System.out.println("Trying " + i + " (word: " + table.bytesToHex(words[i]) + " )");
+ //           System.out.println("Digest " + table.bytesToHex(digest));
+ //           System.out.println("Result " + result + "\n");
             if (result != null) {
                 success++;
                 System.out.println("Success! " + result);
             } else {
                 rejects++;
             }
-        }
+        } 
         time2 = System.currentTimeMillis();
         System.out.println("Total time: " + ((time2-time1)/1000.0) + " seconds.");
         System.out.println("Success rate: " + success + " / " + numWords);
