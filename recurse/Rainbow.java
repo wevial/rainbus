@@ -9,8 +9,8 @@ public class Rainbow {
     private HashMap<String, byte[]> table; // <word, plaintext> ORIGINAL
     public byte[][] testInputs;
     private MessageDigest SHA; // 160 bits
-    private int chainLen = 300;
-    private int rows = 30000;
+    private int chainLen = 250;
+    private int rows = 35000;
 
     public Rainbow() {
         table = new HashMap<String, byte[]>(); // ORIGINAL
@@ -38,9 +38,11 @@ public class Rainbow {
     //---- REDUCE FUNCTION --------------------------------
     public byte[] reduce(byte[] digest, int len) {
         byte last_byte = (byte) len;
+        byte[] len_bytes = intToBytes(len);
         byte[] word = new byte[3];
         for (int i = 0; i < word.length; i++) {
             word[i] = (byte) (digest[(len + i) % 20] + last_byte);
+            //word[i] = (byte) (digest[(len + i) % 20] + len_bytes[i]);
             //word[i] = (byte) (digest[i] + last_byte);
         }
         return word;
@@ -55,8 +57,9 @@ public class Rainbow {
         System.out.println("\nGenerating table...");
         time1 = System.currentTimeMillis();
 
-        //while (table.size() < rows) { // FROM CRYPTO FILE
-        for (int i = 0; i < rows; i++) { // ORIGINAL
+        int i = 0;
+        while (table.size() < rows) { // FROM CRYPTO FILE
+        //for (int i = 0; i < rows; i++) { // ORIGINAL
             plaintext = intToBytes(i);
             word = generateChain(plaintext, i);
         //    System.out.println("\n");
@@ -69,6 +72,7 @@ public class Rainbow {
                 //System.out.println("Collision @ key: " + key + " word: " + bytesToHex(plaintext));
                 collisions++;
             }
+            i++;
         }
 
         time2 = System.currentTimeMillis();
@@ -89,7 +93,7 @@ public class Rainbow {
         for (int i = 0; i < chainLen; i++) {
             digest = hash(word);
             word = reduce(digest, i);
-            if (i == di) {
+            if (i == di && ti < rows) {
                 testInputs[ti] = digest;
             }
             //System.out.println("Digest (" + i + ") \t" + bytesToHex(digest));
