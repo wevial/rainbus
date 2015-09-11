@@ -9,8 +9,8 @@ public class Rainbow {
     private HashMap<String, byte[]> table; // <word, plaintext> ORIGINAL
     public byte[][] testInputs;
     private MessageDigest SHA; // 160 bits
-    private int chainLen = 150;
-    private int rows = 28000;
+    private int chainLen = 300;
+    private int rows = 30000;
 
     public Rainbow() {
         table = new HashMap<String, byte[]>(); // ORIGINAL
@@ -40,8 +40,8 @@ public class Rainbow {
         byte last_byte = (byte) len;
         byte[] word = new byte[3];
         for (int i = 0; i < word.length; i++) {
-            //word[i] = (byte) (digest[(len + i) % 20] + last_byte);
-            word[i] = (byte) (digest[i] + last_byte);
+            word[i] = (byte) (digest[(len + i) % 20] + last_byte);
+            //word[i] = (byte) (digest[i] + last_byte);
         }
         return word;
     }
@@ -73,6 +73,8 @@ public class Rainbow {
 
         time2 = System.currentTimeMillis();
         System.out.println("Table generated in " + ((time2 - time1)/1000.0)  + " seconds");
+        System.out.println("Rows: " + rows);
+        System.out.println("ChainLen: " + chainLen);
         System.out.println("Number of successes: " + success + " of " + rows);
         System.out.println("Number of collisions: " + collisions + " of " + rows);
     }
@@ -100,24 +102,23 @@ public class Rainbow {
     //---- INVERTING --------------------------------------
     public byte[] invert(byte[] digest_to_match) {
         byte[] result = new byte[3];
-//        byte[] digest;// = digest_to_match;
         String key = "";// = digestToKey(digest_to_match);
 //        System.out.println("Attempting to invert " + bytesToHex(digest_to_match));
         for (int i = chainLen - 1; i >= 0; i--) {
-//            digest = digest_to_match;
             key = invertHashReduce(digest_to_match, i);
- //           System.out.println("Inverting... key: " + key);
+//            System.out.println("Inverting... key: " + key);
             if (table.containsKey(key)) {
-   //             System.out.println("Key exists!");
-  //              System.out.println("Word: " + bytesToHex(table.get(key)));
+/*                System.out.println("\nKey exists!");
+                System.out.println("Inverting... key: " + key);
+                System.out.println("Word: " + bytesToHex(table.get(key))); */
                 result = invertChain(digest_to_match, table.get(key));
                 if (result != null) {
-//                    System.out.println("MATCH!!! " + bytesToHex(result));
+ //                   System.out.println("MATCH!!! " + bytesToHex(result));
                     return result;
                 }
             }
         }
- //       System.out.println("");
+//        System.out.println("");
         return null;
     }
 
@@ -135,9 +136,9 @@ public class Rainbow {
 //        System.out.println("INVERTING CHAIN");
         for (int i = 0; i < chainLen; i++) {
             digest = hash(word);
-    //        System.out.println("(Digest: " + bytesToHex(digest) + ")");
-    //        System.out.println("(Digest to match: " + bytesToHex(digest_to_match) + ")");
-    //        System.out.println("(DO THEY MATCH: " + digest.equals(digest_to_match) + ")");
+//            System.out.println("(Digest: " + bytesToHex(digest) + ")");
+//            System.out.println("(Digest to match: " + bytesToHex(digest_to_match) + ")");
+//            System.out.println("(DO THEY MATCH: " + digest.equals(digest_to_match) + ")");
             if (Arrays.equals(digest, digest_to_match)) {
                 return word;
             }
