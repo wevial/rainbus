@@ -9,11 +9,11 @@ public class Rainbow {
     private HashMap<String, byte[]> table; // <word, plaintext> ORIGINAL
     public byte[][] testInputs;
     private MessageDigest SHA; // 160 bits
-    private int chainLen = 250;
-    private int rows = 35000;
+    private int chainLen = 300;
+    private int rows = 28000;
 
     public Rainbow() {
-        table = new HashMap<String, byte[]>(); // ORIGINAL
+        table = new HashMap<String, byte[]>();
         testInputs = new byte[rows][20];
         try {
             SHA = MessageDigest.getInstance("SHA1");
@@ -53,6 +53,7 @@ public class Rainbow {
         long time1, time2;
         byte[] plaintext, word;
         String key;
+        Random R = new Random();
         int success = 0, collisions = 0;
         System.out.println("\nGenerating table...");
         time1 = System.currentTimeMillis();
