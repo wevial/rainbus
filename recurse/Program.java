@@ -12,7 +12,7 @@ public class Program {
         table.writeToFile("RAINBOW_TABLE.ser");
 
         System.out.println("\n*********** T E S T S **********");
-        int numWords = 300;
+        int numWords = 1000;
         byte[][] testInputs = generateWords(numWords);
 
         System.out.println("\n* Inverting with 28k row table *");
@@ -79,10 +79,12 @@ public class Program {
             W.write("READ DONE\n");
 
             start = System.currentTimeMillis();
+            byte[] d;
+            byte[] result;
             for (int i = 0; i < words.length; i++) {
-                byte[] d = digests[i];
+                d = digests[i];
                 time1 = System.currentTimeMillis();
-                byte[] result = table.invert(d);
+                result = table.invert(d);
                 time2 = System.currentTimeMillis();
                 words[i] = result;
                 if (result != null) {

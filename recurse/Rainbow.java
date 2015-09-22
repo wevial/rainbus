@@ -9,8 +9,8 @@ public class Rainbow {
     private HashMap<String, byte[]> table; // <word, plaintext> ORIGINAL
     public byte[][] testInputs;
     private MessageDigest SHA; // 160 bits
-    private int chainLen = 300;
-    private int rows = 28000;
+    private int chainLen = 500;
+    private int rows = 25000;
 
     public Rainbow() {
         table = new HashMap<String, byte[]>();
@@ -76,6 +76,14 @@ public class Rainbow {
         System.out.println("ChainLen: " + chainLen);
         System.out.println("Number of success: " + success + " of " + rows);
         System.out.println("Number of collisions: " + collisions + " of " + rows);
+        plaintext = intToBytes(0);
+        time1 = System.currentTimeMillis();
+        for (i = 0; i < 8388608; i++) {
+            plaintext = intToBytes(i);
+            word = hash(plaintext);
+        }
+        time2 = System.currentTimeMillis();
+        System.out.println("Time to do 2^23 SHA1 hashes: " + ((time2 - time1)/1000.0));
     }
     
     public byte[] generateChain(byte[] plaintext, int ti) {
