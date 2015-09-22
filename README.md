@@ -12,16 +12,16 @@ To find the password to a hash, first apply a reduce function to obtain a plaint
 
 Rainbow table attacks can be prevented with [salting] (https://en.wikipedia.org/wiki/Salt_(cryptography)).
 
-[Check out Wikipedia's page on rainbow tables a more comprehensive explanation.] (https://en.wikipedia.org/wiki/Rainbow_table)
+[Check out Wikipedia's page on rainbow tables for a more comprehensive explanation.] (https://en.wikipedia.org/wiki/Rainbow_table)
 
 Project constraints
 ---
 * Password length: 3 bytes
-* Rainbow table size: ~500 KB
+* Rainbow table size: ~512 KB
 * Accuracy: > 45%
 
 *Note: Multiple tables were allowed in order to improve accuracy, which is what I originally did.*
 
 Updates
 ---
-During my time at the Recurse Center, I cleaned up the code and made the rainbow tables generated both faster and more accurate. Accuracy was improved from ~35% per table to 54.6%. The average time to invert a hash is over twice as fast, going from 0.1 seconds to 0.043 seconds.
+During my time at the Recurse Center, I cleaned up the code and made the rainbow tables generated both faster and more accurate. Accuracy was improved from ~35% per table to ~56%. The average time to invert a hash is over twice as fast, improving from 0.1 seconds to 0.043 seconds.
