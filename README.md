@@ -25,3 +25,7 @@ Project constraints
 Improvements @ Recurse Center
 ---
 During my time at the Recurse Center, I refactored the code and made the rainbow tables generated both faster and more accurate. Accuracy was improved from ~35% per table to ~56%. The average time to invert a hash is over twice as fast, improving from 0.1 seconds to 0.043 seconds.
+
+To-Do
+----
+* Improve the reduce function to cause less merging (aka collisions) between chains.
